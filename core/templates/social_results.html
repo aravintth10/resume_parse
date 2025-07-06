@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Social Profile Extraction</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+        h2 { margin-top: 30px; }
+        .card { background: #fff; padding: 15px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <h1>Candidate Social Profiling</h1>
+
+    <h2>LinkedIn Results</h2>
+    {% for l in linkedin_results %}
+    <div class="card">
+        <p><strong>Bio:</strong> {{ l.Bio }}</p>
+        <p><strong>Education:</strong> {{ l.Education|join:", " }}</p>
+        <p><strong>Employment:</strong> {{ l.Employment|join:", " }}</p>
+        <p><strong>Connections:</strong> {{ l.Connections }}</p>
+    </div>
+    {% endfor %}
+
+    <h2>Instagram Results</h2>
+    {% for i in instagram_results %}
+    <div class="card">
+        <p><strong>Followers:</strong> {{ i.Followers }}</p>
+        <p><strong>Posts:</strong> {{ i.Posts }}</p>
+    </div>
+    {% endfor %}
+</body>
+</html> 

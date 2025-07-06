@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="alert alert-success" role="alert">
+    The profile analysis report has been sent to <strong>{{ user_email }}</strong>.
+</div>
+<script>
+function copyEmail(email) {
+    navigator.clipboard.writeText(email)
+        .then(() => {
+            alert('Email copied to clipboard!');
+        })
+        .catch(err => {
+            console.error('Failed to copy email:', err);
+            alert('Failed to copy email. Please try again.');
+        });
+}
+</script>
+<div class="container mt-5">
+    <h2>Profile Analysis Results</h2>
+    
+    <!-- Action Buttons -->
+    <div class="mb-4">
+        <div class="btn-group">
+            <a href="{{ pdf_path }}" class="btn btn-primary" download>Download PDF</a>
+            <button class="btn btn-success" onclick="copyEmail('{{ user_email }}')">Copy Email</button>
+        </div>
+    </div>
+
+    <!-- User Input Data -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>User Input Data</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Name:</strong> {{ manual_data.full_name }}</p>
+                    <p><strong>Email:</strong> {{ manual_data.email }}</p>
+                    <p><strong>Phone:</strong> {{ manual_data.phone }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>LinkedIn:</strong> {{ manual_data.linkedin }}</p>
+                    <p><strong>GitHub:</strong> {{ manual_data.github }}</p>
+                    <p><strong>Report Email:</strong> {{ user_email }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Parsed Resume Data -->
+    {% if parsed_data %}
+        <h2>Parsed Resume Data</h2>
+        <ul>
+            {% if parsed_data.full_name %}<li>Name: {{ parsed_data.full_name }} <span style="color: #888; font-size: 0.9em;">({{ data_sources.full_name }})</span></li>{% endif %}
+            {% if parsed_data.email %}<li>Email: {{ parsed_data.email|join:", " }} <span style="color: #888; font-size: 0.9em;">({{ data_sources.email }})</span></li>{% endif %}
+            {% if parsed_data.phone %}<li>Phone: {{ parsed_data.phone|join:", " }} <span style="color: #888; font-size: 0.9em;">({{ data_sources.phone }})</span></li>{% endif %}
+            {% if parsed_data.linkedin %}<li>LinkedIn: <a href="{{ parsed_data.linkedin }}">{{ parsed_data.linkedin }}</a> <span style="color: #888; font-size: 0.9em;">({{ data_sources.linkedin }})</span></li>{% endif %}
+            {% if parsed_data.github %}<li>GitHub: <a href="{{ parsed_data.github }}">{{ parsed_data.github }}</a> <span style="color: #888; font-size: 0.9em;">({{ data_sources.github }})</span></li>{% endif %}
+        </ul>
+    {% endif %}
+
+    <!-- Confidence Scores -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Confidence Scores</h3>
+        </div>
+        <div class="card-body">
+            <ul>
+                <li><strong>Name Match:</strong> {{ confidence_scores.name_match }}%</li>
+                <li><strong>Image Match:</strong> {{ confidence_scores.image_match }}%</li>
+                <li><strong>Metadata Correlation:</strong> {{ confidence_scores.metadata_correlation }}%</li>
+                <li><strong>Activity Level:</strong> {{ confidence_scores.activity_level }}%</li>
+                <li><strong>Communication Style:</strong> {{ confidence_scores.communication_style }}%</li>
+            </ul>
+        </div>
+    </div>
+
+    {% if not show_results %}
+        <div class="alert alert-warning">No real profiles found for this candidate. Displaying no results.</div>
+    {% endif %}
+    {% if show_results %}
+    <!-- Scraped Results -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Scraped Social Profiles</h3>
+            <button id="show-scraped-btn" class="btn btn-info btn-sm" type="button">Show Scraped Results</button>
+        </div>
+        <div class="card-body">
+            <div id="scraped-results-container" style="display: none;">
+                <h2>LinkedIn Results</h2>
+                {% if linkedin_profiles %}
+                    {% for profile in linkedin_profiles %}
+                        <div style="margin-bottom: 1em;">
+                            <a href="{{ profile.link }}" target="_blank">{{ profile.name }}</a><br>
+                            <strong>Bio:</strong> {{ profile.bio|default:'N/A' }}<br>
+                            <strong>Education:</strong> {{ profile.education|default:'N/A' }}<br>
+                            <strong>Employment:</strong> {{ profile.employment|default:'N/A' }}<br>
+                            <strong>Connections:</strong> {{ profile.connections|default:'N/A' }}<br>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No LinkedIn profiles found.</p>
+                {% endif %}
+
+                <h2>Instagram Results</h2>
+                {% if instagram_profiles %}
+                    {% for profile in instagram_profiles %}
+                        <div style="margin-bottom: 1em;">
+                            <a href="{{ profile.link }}" target="_blank">{{ profile.link }}</a><br>
+                            <strong>Followers:</strong> {{ profile.followers|default:'N/A' }}<br>
+                            <strong>Posts:</strong> {{ profile.posts|default:'N/A' }}<br>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No Instagram profiles found.</p>
+                {% endif %}
+
+                <h2>YouTube Results</h2>
+                {% if youtube_profiles %}
+                    {% for profile in youtube_profiles %}
+                        <div style="margin-bottom: 1em;">
+                            <a href="{{ profile.link }}" target="_blank">{{ profile.title }}</a><br>
+                            <strong>Description:</strong> {{ profile.description|default:'N/A' }}<br>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No YouTube profiles found.</p>
+                {% endif %}
+
+                <h2>Facebook Results</h2>
+                {% if facebook_profiles %}
+                    {% for profile in facebook_profiles %}
+                        <div style="margin-bottom: 1em;">
+                            <a href="{{ profile.link }}" target="_blank">{{ profile.name }}</a><br>
+                            <strong>Bio:</strong> {{ profile.bio|default:'N/A' }}<br>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No Facebook profiles found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Best Match Profile -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Top Matching Profile</h3>
+        </div>
+        <div class="card-body">
+            {% if best_profile %}
+                <p><strong>Platform:</strong> {{ best_profile.platform|default:'N/A' }}</p>
+                <p><strong>Handle:</strong> {{ best_profile.handle|default:'N/A' }}</p>
+                <p><strong>Name:</strong> {{ best_profile.name|default:'N/A' }}</p>
+                <p><strong>Profile URL:</strong> <a href="{{ best_profile.link|default:'#' }}" target="_blank">{{ best_profile.link|default:'N/A' }}</a></p>
+                <p><strong>Confidence Score:</strong> {{ best_profile.confidence|default:'0' }}%</p>
+                <ul>
+                    <li><strong>Name Match:</strong> {{ best_profile.scores.name_match|default:'0' }}%</li>
+                    <li><strong>Email Match:</strong> {{ best_profile.scores.email_match|default:'0' }}%</li>
+                    <li><strong>Position Match:</strong> {{ best_profile.scores.position_match|default:'0' }}%</li>
+                    <li><strong>Company Match:</strong> {{ best_profile.scores.company_match|default:'0' }}%</li>
+                </ul>
+                <div style="width: 80%; margin: auto; padding-top: 20px;">
+                    <canvas id="confidenceChart"></canvas>
+                </div>
+            {% else %}
+                <p>No matching profiles found.</p>
+            {% endif %}
+            <h4>All Profile Comparisons</h4>
+            <pre>{{ all_profiles_flat|safe }}</pre>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Platform</th>
+                        <th>Handle</th>
+                        <th>URL</th>
+                        <th>Name Match (%)</th>
+                        <th>Email Match (%)</th>
+                        <th>Position Match (%)</th>
+                        <th>Company Match (%)</th>
+                        <th>Overall Score (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in all_profiles_flat %}
+                        <tr>
+                            <td>{{ p.platform|default:'N/A' }}</td>
+                            <td>{{ p.handle|default:'N/A' }}</td>
+                            <td><a href="{{ p.link|default:'#' }}" target="_blank">{{ p.link|default:'N/A' }}</a></td>
+                            <td>{{ p.scores.name_match|default:'0' }}%</td>
+                            <td>{{ p.scores.email_match|default:'0' }}%</td>
+                            <td>{{ p.scores.position_match|default:'0' }}%</td>
+                            <td>{{ p.scores.company_match|default:'0' }}%</td>
+                            <td>{{ p.scores.overall|default:'0' }}%</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% if best_profile and best_profile.scores %}
+    {{ best_profile.scores|json_script:"chart-data" }}
+    <script>
+        try {
+            const scoresData = JSON.parse(document.getElementById('chart-data').textContent);
+            if (scoresData) {
+                const ctx = document.getElementById('confidenceChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Name Match', 'Email Match', 'Position Match', 'Company Match', 'Overall Score'],
+                        datasets: [{
+                            label: 'Confidence Score (%)',
+                            data: [
+                                scoresData.name_match,
+                                scoresData.email_match,
+                                scoresData.position_match,
+                                scoresData.company_match,
+                                scoresData.overall
+                            ],
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.2)',
+                                'rgba(54, 162, 235, 0.2)',
+                                'rgba(255, 206, 86, 0.2)',
+                                'rgba(75, 192, 192, 0.2)',
+                                'rgba(153, 102, 255, 0.2)'
+                            ],
+                            borderColor: [
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(153, 102, 255, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Confidence Score Breakdown'
+                            }
+                        }
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("Could not parse chart data or render chart:", e);
+        }
+    </script>
+{% endif %}
+<script>
+    document.getElementById('show-scraped-btn').addEventListener('click', function() {
+        var container = document.getElementById('scraped-results-container');
+        if (container.style.display === 'none') {
+            container.style.display = 'block';
+        } else {
+            container.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

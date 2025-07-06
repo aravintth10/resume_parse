@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Candidate Profile Results</title>
+    <style>
+        body { font-family: Arial; margin: 30px; background: #f8f8f8; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-radius: 8px; }
+        h2 { margin-top: 0; }
+    </style>
+</head>
+<body>
+    <h1>Candidate Profiling - Extracted Data</h1>
+    {% for result in results %}
+    <div class="card">
+        <h2>Candidate {{ forloop.counter }}</h2>
+        <p><strong>Education:</strong> {{ result.Education|join:", " }}</p>
+        <p><strong>Employment:</strong> {{ result.Employment|join:", " }}</p>
+        <p><strong>Followers:</strong> {{ result.Followers }}</p>
+    </div>
+    {% endfor %}
+</body>
+</html> 

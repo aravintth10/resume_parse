@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Candidate Profile Submission</h1>
+
+<!-- Show Django messages -->
+{% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<!-- Show form errors -->
+{% if form.errors %}
+    <p style="color: red;">Please fix the errors below:</p>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label>Full Name:</label><br>
+    {{ form.full_name }}<br><br>
+
+    <label>First Name:</label><br>
+    {{ form.first_name }}<br><br>
+
+    <label>Last Name:</label><br>
+    {{ form.last_name }}<br><br>
+
+    <label>Email (of candidate):</label><br>
+    {{ form.email }}<br><br>
+
+    <label>Phone:</label><br>
+    {{ form.phone }}<br><br>
+
+    <label>LinkedIn URL:</label><br>
+    {{ form.linkedin }}<br><br>
+
+    <label>GitHub URL:</label><br>
+    {{ form.github }}<br><br>
+
+    <label>Candidate Photo:</label><br>
+    {{ form.image }}<br><br>
+
+    <label>Resume File (PDF/DOCX):</label><br>
+    {{ form.resume }}<br><br>
+
+    <label><strong>Your Email (to receive report):</strong></label><br>
+    {{ form.user_email }}<br><br>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+{% endblock %} 

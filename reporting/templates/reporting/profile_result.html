@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Candidate Profile Report</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f2f2f2; }
+        .container { background: #fff; padding: 20px; border-radius: 10px; max-width: 700px; margin: auto; box-shadow: 0 0 10px #ccc; }
+        .profile-img { border-radius: 50%; width: 120px; height: 120px; }
+        .confidence-bar { height: 20px; background: #eee; border-radius: 5px; margin-bottom: 15px; }
+        .bar-fill { height: 100%; background: #4caf50; }
+        .label { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if profile_picture and profile_picture != 'N/A' %}
+            <img class="profile-img" src="{{ profile_picture }}" alt="Profile Picture">
+        {% endif %}
+        <h2>{{ full_name }}</h2>
+        {% if platform|lower == 'linkedin' %}
+            {% if bio %}<p><span class="label">Bio:</span> {{ bio }}</p>{% endif %}
+            {% if summary %}<p><span class="label">Summary:</span> {{ summary }}</p>{% endif %}
+            {% if education %}<p><span class="label">Education:</span> {{ education }}</p>{% endif %}
+            {% if employment %}<p><span class="label">Employment:</span> {{ employment }}</p>{% endif %}
+            {% if connections %}<p><span class="label">Connections:</span> {{ connections }}</p>{% endif %}
+        {% elif platform|lower == 'instagram' %}
+            {% if bio %}<p><span class="label">Bio:</span> {{ bio }}</p>{% endif %}
+            {% if followers %}<p><span class="label">Followers:</span> {{ followers }}</p>{% endif %}
+            {% if posts %}<p><span class="label">Posts:</span> {{ posts }}</p>{% endif %}
+        {% else %}
+            {% if bio %}<p><span class="label">Bio:</span> {{ bio }}</p>{% endif %}
+            {% if education %}<p><span class="label">Education:</span> {{ education }}</p>{% endif %}
+            {% if employment %}<p><span class="label">Employment:</span> {{ employment }}</p>{% endif %}
+            {% if followers %}<p><span class="label">Followers:</span> {{ followers }}</p>{% endif %}
+            {% if posts %}<p><span class="label">Posts:</span> {{ posts }}</p>{% endif %}
+        {% endif %}
+        {% if skills %}<p><span class="label">Skills:</span> {{ skills }}</p>{% endif %}
+        {% if certifications %}<p><span class="label">Certifications:</span> {{ certifications }}</p>{% endif %}
+        {% if contact %}<p><span class="label">Contact:</span> <a href="{{ contact }}" target="_blank">{{ contact }}</a></p>{% endif %}
+        <p><span class="label">Platform:</span> {{ platform }}</p>
+        <p><span class="label">Handle:</span> {{ handle }}</p>
+        <p><span class="label">Profile URL:</span> <a href="{{ profile_url }}" target="_blank">{{ profile_url }}</a></p>
+
+        <h3>Confidence Scores</h3>
+        {% for label, score in confidence_scores.items %}
+            <p>{{ label|title }}: {{ score }}%</p>
+            <div class="confidence-bar">
+                <div class="bar-fill" style="width: {{ score }}%"></div>
+            </div>
+        {% endfor %}
+        <br><br>
+        <a href="{% url 'download_pdf' %}">
+            <button style="padding: 10px 20px;">Download Report (PDF)</button>
+        </a>
+        <br><br>
+        {% if not show_results %}
+            <div style="color: orange; font-weight: bold;">No real profiles found for this candidate. Please try again or upload another candidate.</div>
+        {% endif %}
+        {% if only_mock_data %}
+            <div style="color: orange; font-weight: bold;">Only mock data was found for this candidate. Please try with a different candidate or check your scraping configuration.</div>
+        {% endif %}
+        {% if show_results %}
+            <h3>All Profile Comparisons</h3>
+            <table border="1" style="width:100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th>Platform</th>
+                        <th>Handle</th>
+                        <th>URL</th>
+                        <th>Name Match (%)</th>
+                        <th>Email Match (%)</th>
+                        <th>Position Match (%)</th>
+                        <th>Company Match (%)</th>
+                        <th>Overall Score (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in all_profiles_flat %}
+                        <tr>
+                            <td>{{ p.platform|default:'N/A' }}</td>
+                            <td>{{ p.handle|default:'N/A' }}</td>
+                            <td><a href="{{ p.link|default:'#' }}" target="_blank">{{ p.link|default:'N/A' }}</a></td>
+                            <td>{{ p.scores.name_match|default:'0' }}%</td>
+                            <td>{{ p.scores.email_match|default:'0' }}%</td>
+                            <td>{{ p.scores.position_match|default:'0' }}%</td>
+                            <td>{{ p.scores.company_match|default:'0' }}%</td>
+                            <td>{{ p.scores.overall|default:'0' }}%</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+        <br><br>
+        <a href="/" style="color: #007bff; text-decoration: underline;">Upload another candidate</a>
+    </div>
+</body>
+</html>

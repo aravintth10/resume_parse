@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="alert alert-success" role="alert">
+    The candidate profile has been uploaded successfully.
+</div>
+
+{% if confidence_scores %}
+    <ul>
+        <li>Name Match: {{ confidence_scores.name_match }}%</li>
+        <li>Image Match: {{ confidence_scores.image_match }}%</li>
+        <li>Metadata Correlation: {{ confidence_scores.metadata_correlation }}%</li>
+        <li>Activity Level: {{ confidence_scores.activity_level }}%</li>
+        <li>Communication Style: {{ confidence_scores.communication_style }}%</li>
+    </ul>
+{% endif %}
+
+{% if parsed_data %}
+    <h2>Parsed Resume Data</h2>
+    <ul>
+        {% if parsed_data.full_name %}<li>Name: {{ parsed_data.full_name }}</li>{% endif %}
+        {% if parsed_data.email %}<li>Email: {{ parsed_data.email|join:", " }}</li>{% endif %}
+        {% if parsed_data.phone %}<li>Phone: {{ parsed_data.phone|join:", " }}</li>{% endif %}
+        {% if parsed_data.linkedin %}<li>LinkedIn: <a href="{{ parsed_data.linkedin }}">{{ parsed_data.linkedin }}</a></li>{% endif %}
+        {% if parsed_data.github %}<li>GitHub: <a href="{{ parsed_data.github }}">{{ parsed_data.github }}</a></li>{% endif %}
+    </ul>
+{% endif %}
+
+{% if candidate %}
+    <h2>Candidate Details</h2>
+    <ul>
+        <li>Name: {{ candidate.name }}</li>
+        <li>Email: {{ candidate.email }}</li>
+        <!-- Add more fields as needed -->
+    </ul>
+{% endif %}
+
+<button id="show-scraped-btn">Show Scraped Results</button>
+<button id="show-top-match-btn">Show Top Matching Profile</button>
+
+<hr>
+
+<!-- Hidden container for scraped results -->
+<div id="scraped-results-container" style="display: none;">
+    <h2>LinkedIn Results</h2>
+    {% for profile in linkedin_profiles %}
+      <div>
+        <a href="{{ profile.link }}" target="_blank">{{ profile.name }}</a>
+        <p>{{ profile.snippet }}</p>
+        <p><strong>Bio:</strong> {{ profile.bio|default:'N/A' }}</p>
+        <p><strong>Education:</strong> {{ profile.education|default:'N/A' }}</p>
+        <p><strong>Employment:</strong> {{ profile.employment|default:'N/A' }}</p>
+        <p><strong>Followers:</strong> {{ profile.followers|default:'N/A' }}</p>
+        <p><strong>Posts:</strong> {{ profile.posts|default:'N/A' }}</p>
+      </div>
+    {% empty %}
+        <p>No LinkedIn profiles found.</p>
+    {% endfor %}
+
+    <h2>Instagram Results</h2>
+    {% for profile in instagram_profiles %}
+      <div>
+        <a href="{{ profile.link }}" target="_blank">{{ profile.link }}</a>
+        <p>{{ profile.bio }}</p>
+      </div>
+    {% empty %}
+        <p>No Instagram profiles found.</p>
+    {% endfor %}
+
+    <h2>YouTube Results</h2>
+    {% for result in youtube_profiles %}
+      <div>
+        <a href="{{ result.link }}" target="_blank">{{ result.title }}</a>
+        <p>Channel: {{ result.channel }}</p>
+        <p>{{ result.description }}</p>
+      </div>
+    {% empty %}
+        <p>No YouTube profiles found.</p>
+    {% endfor %}
+
+    <h2>Facebook Results</h2>
+    {% for result in facebook_results %}
+      <div>
+        <a href="{{ result.url }}" target="_blank">{{ result.title }}</a>
+        <p>{{ result.description }}</p>
+      </div>
+    {% empty %}
+        <p>No Facebook profiles found.</p>
+    {% endfor %}
+</div>
+
+<!-- Hidden container for top matching profile -->
+<div id="top-match-container" style="display: none;">
+    <h2>Top Matching Profile</h2>
+    {% if best_profile %}
+      <p><strong>Platform:</strong> {{ best_profile.platform }}</p>
+      <p><strong>Handle:</strong> {{ best_profile.handle }}</p>
+      <p><strong>Profile URL:</strong> <a href="{{ best_profile.link }}">{{ best_profile.link }}</a></p>
+      <p><strong>Confidence Score:</strong> {{ best_profile.confidence }}%</p>
+      <p><strong>Bio:</strong> {{ best_profile.bio|default:'N/A' }}</p>
+      <p><strong>Education:</strong> {{ best_profile.education|default:'N/A' }}</p>
+      <p><strong>Employment:</strong> {{ best_profile.employment|default:'N/A' }}</p>
+      <p><strong>Followers:</strong> {{ best_profile.followers|default:'N/A' }}</p>
+      <p><strong>Posts:</strong> {{ best_profile.posts|default:'N/A' }}</p>
+      <div style="width: 80%; margin: auto; padding-top: 20px;">
+          <canvas id="confidenceChart"></canvas>
+      </div>
+    {% else %}
+      <p>No matching profiles found.</p>
+    {% endif %}
+    <h3>All Profile Comparisons</h3>
+    <table border="1">
+      <tr>
+        <th>Platform</th>
+        <th>Handle</th>
+        <th>URL</th>
+        <th>Bio</th>
+        <th>Education</th>
+        <th>Employment</th>
+        <th>Followers</th>
+        <th>Posts</th>
+        <th>Score</th>
+      </tr>
+      {% for p in all_profiles_flat %}
+        <tr>
+          <td>{{ p.platform }}</td>
+          <td>{{ p.handle }}</td>
+          <td><a href="{{ p.link }}">{{ p.link }}</a></td>
+          <td>{{ p.bio|default:'N/A' }}</td>
+          <td>{{ p.education|default:'N/A' }}</td>
+          <td>{{ p.employment|default:'N/A' }}</td>
+          <td>{{ p.followers|default:'N/A' }}</td>
+          <td>{{ p.posts|default:'N/A' }}</td>
+          <td>{{ p.confidence }}%</td>
+        </tr>
+      {% endfor %}
+    </table>
+</div>
+
+<hr>
+<a href="/">Upload another candidate</a>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ best_profile.scores|json_script:"chart-data" }}
+
+<script>
+    document.getElementById('show-scraped-btn').addEventListener('click', function() {
+        var container = document.getElementById('scraped-results-container');
+        if (container.style.display === 'none') {
+            container.style.display = 'block';
+        } else {
+            container.style.display = 'none';
+        }
+    });
+
+    document.getElementById('show-top-match-btn').addEventListener('click', function() {
+        var container = document.getElementById('top-match-container');
+        if (container.style.display === 'none') {
+            container.style.display = 'block';
+        } else {
+            container.style.display = 'none';
+        }
+    });
+
+    // Chart.js script
+    try {
+        const scoresData = JSON.parse(document.getElementById('chart-data').textContent);
+        if (scoresData) {
+            const ctx = document.getElementById('confidenceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Name Match', 'Metadata Correlation', 'Image Match', 'Activity Level', 'Overall Score'],
+                    datasets: [{
+                        label: 'Confidence Score (%)',
+                        data: [
+                            scoresData.name_match,
+                            scoresData.metadata_correlation,
+                            scoresData.image_match,
+                            scoresData.activity_level,
+                            scoresData.overall
+                        ],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Confidence Score Breakdown'
+                        }
+                    }
+                }
+            });
+        }
+    } catch (e) {
+        console.error("Could not parse chart data or render chart:", e);
+    }
+</script>
+{% endblock %}
+
+
